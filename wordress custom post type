@@ -1,0 +1,176 @@
+// metal prices data CPT
+// Register custom post type
+function create_metal_table_post_type() {
+    register_post_type('metal_table',
+        array(
+            'labels' => array(
+                'name' => __('Metal Tables'),
+                'singular_name' => __('Metal Table')
+            ),
+            'public' => true,
+            'has_archive' => true,
+            'supports' => array('title', 'editor'),
+            'show_in_rest' => true, // Enable Gutenberg editor
+        )
+    );
+}
+add_action('init', 'create_metal_table_post_type');
+
+// Add meta boxes
+function add_metal_table_meta_boxes() {
+    add_meta_box(
+        'metal_table_details_meta_box',  // ID
+        'Metal Table Details',           // Title
+        'display_metal_table_meta_box',  // Callback function
+        'metal_table',                   // Screen (post type)
+        'normal',                        // Context
+        'high'                           // Priority
+    );
+}
+add_action('add_meta_boxes', 'add_metal_table_meta_boxes');
+
+// Display meta box form
+function display_metal_table_meta_box($post) {
+    // Retrieve existing values
+    $bid = get_post_meta($post->ID, 'bid', true);
+    $ask = get_post_meta($post->ID, 'ask', true);
+    $performance = get_post_meta($post->ID, 'performance', true);
+    $performance_dropdown = get_post_meta($post->ID, 'performance_dropdown', true);
+
+    // Add nonce for security
+    wp_nonce_field('save_metal_table_meta', 'metal_table_meta_nonce');
+    ?>
+    <p>
+        <label for="bid">Bid:</label>
+        <input type="text" name="bid" id="bid" value="<?php echo esc_attr($bid); ?>" />
+    </p>
+    <p>
+        <label for="ask">Ask:</label>
+        <input type="text" name="ask" id="ask" value="<?php echo esc_attr($ask); ?>" />
+    </p>
+    <p>
+        <label for="performance">Performance:</label>
+        <input type="text" name="performance" id="performance" value="<?php echo esc_attr($performance); ?>" />
+    </p>
+    <p>
+        <label for="performance_dropdown">Performance (Dropdown):</label>
+        <select name="performance_dropdown" id="performance_dropdown">
+            <option value="up" class="price-up" <?php selected($performance_dropdown, 'up'); ?>>Up</option>
+            <option value="down" class="price-down" <?php selected($performance_dropdown, 'down'); ?>>Down</option>
+        </select>
+    </p>
+    <?php
+}
+
+// Save meta box data
+function save_metal_table_meta($post_id) {
+    // Check for autosave
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+
+    // Check user permissions
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    // Save fields
+    if (isset($_POST['bid'])) {
+        update_post_meta($post_id, 'bid', sanitize_text_field($_POST['bid']));
+    }
+    if (isset($_POST['ask'])) {
+        update_post_meta($post_id, 'ask', sanitize_text_field($_POST['ask']));
+    }
+    if (isset($_POST['performance'])) {
+        update_post_meta($post_id, 'performance', sanitize_text_field($_POST['performance']));
+    }
+    if (isset($_POST['performance_dropdown'])) {
+        update_post_meta($post_id, 'performance_dropdown', sanitize_text_field($_POST['performance_dropdown']));
+    }
+}
+add_action('save_post', 'save_metal_table_meta');
+
+// Display metal prices table via shortcode
+function display_metal_prices_table() {
+    ob_start(); // Start output buffering
+
+    // Query to get all metal prices posts
+    $args = array(
+        'post_type' => 'metal_table', // Corrected post type
+        'posts_per_page' => -1,
+    );
+    $query = new WP_Query($args);
+
+    if ($query->have_posts()) :
+        ?>
+        <div class="metal-prices-table" style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metal</th>
+                        <th>Bid</th>
+                        <th>Ask</th>
+                        <th>Perf.</th>
+						<th>up/down</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    while ($query->have_posts()) : $query->the_post();
+                        // Retrieve custom fields
+                        $bid = get_post_meta(get_the_ID(), 'bid', true);
+                        $ask = get_post_meta(get_the_ID(), 'ask', true);
+                        $performance = get_post_meta(get_the_ID(), 'performance', true);
+                        $performance_dropdown = get_post_meta(get_the_ID(), 'performance_dropdown', true);
+
+                        // Determine the metal class based on the post title
+                        $metal_title = get_the_title();
+                        $metal_class = '';
+
+                        switch ($metal_title) {
+                            case 'Gold':
+                                $metal_class = 'Au';
+//                                 $canonical_name = 'Au';
+                                break;
+                            case 'Silver':
+                                $metal_class = 'Ag';
+//                                 $canonical_name = 'Ag';
+                                break;
+                            case 'Palladium':
+                                $metal_class = 'Pd';
+//                                 $canonical_name = 'Pd';
+                                break;
+                            case 'Platinum':
+                                $metal_class = 'Ps';
+//                                 $canonical_name = 'Ps';
+                                break;
+                            default:
+                                $canonical_name = ''; // No canonical name for other metals
+                                break;
+                        }
+                        ?>
+                        <tr>
+                            <td>
+                                <span class="icon <?php echo esc_attr($metal_class); ?>">
+                                    <?php echo strtoupper(substr($metal_class, 0, 2)); ?>
+                                </span>
+                                <?php //echo esc_html($canonical_name); // Display the canonical name ?>
+                                <?php the_title(); ?>
+                            </td>
+                            <td><?php echo esc_html($bid); ?></td>
+                            <td><?php echo esc_html($ask); ?></td>
+                            <td><span class="performance <?php echo esc_attr($performance); ?>"><?php echo esc_html($performance); ?></span></td>
+                            <td><span class="performance_dropdown <?php echo esc_attr($performance); ?>"><?php echo esc_html($performance_dropdown); ?></span></td>
+                        </tr>
+                        <?php
+                    endwhile;
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    else :
+        echo '<p>No metal prices found.</p>';
+    endif;
+
+    wp_reset_postdata();
+
+    return ob_get_clean();
+}
+add_shortcode('metal_prices_table', 'display_metal_prices_table');
