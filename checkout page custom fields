@@ -1,0 +1,83 @@
+//functions.php file code//
+
+<?php
+// Save Custom Checkout Fields
+function save_custom_checkout_fields($order_id) {
+    if (!empty($_POST['billing_metamask_address'])) {
+        update_post_meta($order_id, '_billing_metamask_address', sanitize_text_field($_POST['billing_metamask_address']));
+    }
+    if (!empty($_POST['billing_referral_name'])) {
+        update_post_meta($order_id, '_billing_referral_name', sanitize_text_field($_POST['billing_referral_name']));
+    }
+}
+add_action('woocommerce_checkout_update_order_meta', 'save_custom_checkout_fields');
+
+// Display Custom Fields in WooCommerce Admin Order Page
+function display_custom_order_data_in_admin($order) {
+    $metamask_address = get_post_meta($order->get_id(), '_billing_metamask_address', true);
+    $referral_number = get_post_meta($order->get_id(), '_billing_referral_name', true);
+
+    if ($metamask_address) {
+        echo '<p><strong>' . __('Metamask Address') . ':</strong> ' . $metamask_address . '</p>';
+    }
+
+    if ($referral_number) {
+        echo '<p><strong>' . __('Referral Name') . ':</strong> ' . $referral_number . '</p>';
+    }
+}
+add_action('woocommerce_admin_order_data_after_billing_address', 'display_custom_order_data_in_admin', 10, 1);
+
+// Add Custom Fields to Customer Order Email
+function add_custom_fields_to_order_email($order, $sent_to_admin, $plain_text, $email) {
+    $metamask_address = get_post_meta($order->get_id(), '_billing_metamask_address', true);
+    $referral_number = get_post_meta($order->get_id(), '_billing_referral_name', true);
+
+    if ($metamask_address) {
+        echo '<p><strong>' . __('Metamask Address') . ':</strong> ' . $metamask_address . '</p>';
+    }
+
+    if ($referral_number) {
+        echo '<p><strong>' . __('Referral Name') . ':</strong> ' . $referral_number . '</p>';
+    }
+}
+add_action('woocommerce_email_customer_details', 'add_custom_fields_to_order_email', 10, 4);
+
+// Add Custom Fields to Admin Order Email
+function add_custom_fields_to_admin_order_email($order, $sent_to_admin, $plain_text, $email) {
+    $metamask_address = get_post_meta($order->get_id(), '_billing_metamask_address', true);
+    $referral_number = get_post_meta($order->get_id(), '_billing_referral_name', true);
+
+    if ($metamask_address) {
+        echo '<p><strong>' . __('Metamask Address') . ':</strong> ' . $metamask_address . '</p>';
+    }
+
+    if ($referral_number) {
+        echo '<p><strong>' . __('Referral Name') . ':</strong> ' . $referral_number . '</p>';
+    }
+}
+add_action('woocommerce_email_order_details', 'add_custom_fields_to_admin_order_email', 10, 4);
+
+// Add Custom Fields to Checkout Page
+function custom_checkout_fields($fields) {
+    $fields['billing']['billing_metamask_address'] = array(
+        'type' => 'text',
+        'label' => __('Metamask Address'),
+        'placeholder' => __('Metamask Address'),
+        'required' => false,
+        'class' => array('form-row-wide'),
+        'clear' => true,
+    );
+
+    $fields['billing']['billing_referral_name'] = array(
+        'type' => 'text',
+        'label' => __('Referral Name'),
+        'placeholder' => __('Referral Name'),
+        'required' => false,
+        'class' => array('form-row-wide'),
+        'clear' => true,
+    );
+
+    return $fields;
+}
+add_filter('woocommerce_billing_fields', 'custom_checkout_fields');
+?>
