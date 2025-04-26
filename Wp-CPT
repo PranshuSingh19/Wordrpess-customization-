@@ -8,6 +8,5 @@ function custom_post_banner() {
 			'rewrite'		=> array('slug' => 'banner'),
 			'supports'		=> array( 'title', 'editor', 'thumbnail', 'custom-fields'),
 		)
-	);
-}
+	);  }
 add_action('init', 'custom_post_banner');
