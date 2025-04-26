@@ -1,0 +1,13 @@
+// banner ke liye 
+function custom_post_banner() {
+	register_post_type('Banner',
+		array(
+			'label'			=> 'All Banners',
+			'public'		=> true,
+			'has_archive' 	=> true,
+			'rewrite'		=> array('slug' => 'banner'),
+			'supports'		=> array( 'title', 'editor', 'thumbnail', 'custom-fields'),
+		)
+	);
+}
+add_action('init', 'custom_post_banner');
