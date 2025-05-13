@@ -1,12 +1,16 @@
-// banner ke liye 
-function custom_post_banner() {
-	register_post_type('Banner',
+function my_post_type(){
+
+	register_post_type("Pranshu",
+
 		array(
-			'label'			=> 'All Banners',
-			'public'		=> true,
-			'has_archive' 	=> true,
-			'rewrite'		=> array('slug' => 'banner'),
-			'supports'		=> array( 'title', 'editor', 'thumbnail', 'custom-fields'),
-		)
-	);  }
-add_action('init', 'custom_post_banner');
+
+			'labels'   			=> array(
+				'name' 			=> __('Pranshus', 'textdomain'), // __() is a WordPress localization function that returns a translatable string.
+				'singular_name'	=> __('Pranshu', 'textdomain'), // 'textdomain' is a placeholder for your theme or plugin's
+			),
+			'public'			=> true, // If public true then post type show in dashboard
+			'has_archive'		=> true,  // When true, WordPress will generate an archive page for this post type (yoursite.com/pranshus/)
+			'supports'			=> array ('title', 'author', 'thumbnail', 'editor', 'excerpt', 'comments'),
+		));
+}
+add_action('init', 'my_post_type');
